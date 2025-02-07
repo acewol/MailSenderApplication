@@ -5,7 +5,7 @@ import requests
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-def send_emails(folder_path, excel_path, sender_email, token):
+def send_emails(folder_path, excel_path, sender_email, token, email_text):
     try:
         # Загрузка данных из Excel
         data = pd.read_excel(excel_path)
@@ -42,7 +42,7 @@ def send_emails(folder_path, excel_path, sender_email, token):
                     "subject": "Ваш документ",
                     "body": {
                         "contentType": "Text",
-                        "content": f"Уважаемый(ая) {full_name},\n\nВо вложении вы найдете ваш документ."
+                        "content": email_text.replace("{full_name}", full_name)  # Заменяем плейсхолдер на имя
                     },
                     "toRecipients": [
                         {"emailAddress": {"address": recipient_email}}
@@ -83,12 +83,13 @@ def start_sending():
     excel = excel_path.get()
     email = sender_email.get()
     token = api_token.get()
+    email_text = email_text_entry.get("1.0", tk.END).strip()  # Получаем текст из текстового поля
 
-    if not folder or not excel or not email or not token:
+    if not folder or not excel or not email or not token or not email_text:
         messagebox.showwarning("Ошибка", "Все поля должны быть заполнены")
         return
 
-    send_emails(folder, excel, email, token)
+    send_emails(folder, excel, email, token, email_text)
 
 # Создание GUI
 root = tk.Tk()
@@ -114,6 +115,10 @@ tk.Label(root, text="Excel файл:").grid(row=3, column=0, padx=10, pady=5, st
 tk.Entry(root, textvariable=excel_path, width=40).grid(row=3, column=1, padx=10, pady=5)
 tk.Button(root, text="Обзор", command=browse_excel).grid(row=3, column=2, padx=10, pady=5)
 
-tk.Button(root, text="Начать рассылку", command=start_sending, bg="green", fg="white").grid(row=4, column=1, pady=20)
+tk.Label(root, text="Текст письма:").grid(row=4, column=0, padx=10, pady=5, sticky="w")
+email_text_entry = tk.Text(root, height=5, width=40)
+email_text_entry.grid(row=4, column=1, padx=10, pady=5)
+
+tk.Button(root, text="Начать рассылку", command=start_sending, bg="green", fg="white").grid(row=5, column=1, pady=20)
 
 root.mainloop()
